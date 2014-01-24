@@ -25,3 +25,11 @@ class DummyHandlerManager(manager.CrawlManager):
                    'handler_id':self.m_id,
                    'crawldoc':crawldoc})
 
+class HandlerManager(manager.CrawlManager):
+    def __init__(self):
+        super(HandlerManager,self).__init__()
+    def ProcessCrawlDoc(self,crawldoc):
+        LOG.debug(_('Get one crawldoc at %(name_)s %(handler_id)s crawldoc %(crawldoc)s'),
+                  {'name_':self.__class__.__name__,
+                   'handler_id':self.m_id,
+                   'crawldoc':crawldoc})

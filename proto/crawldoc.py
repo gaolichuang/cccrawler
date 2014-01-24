@@ -3,6 +3,7 @@ Created on 2014.1.5
 
 @author: gaolichuang@gmail.com
 '''
+import copy
 
 class AbstractObject(object):
     @property
@@ -54,21 +55,30 @@ class CrawlDoc(AbstractObject):
         self.timestamp = None
         self.parent_url = None
         self.level = 0  # start from 0
+        
+        # crawl meta, use for custom crawl
+        self.method = 'GET' # default is get
+        self.referer = None
+        self.custom_accept_types = None
 
         # get from http
         self.code = None
-        self.redirect_url = None
-        self.last_modified = None
-        self.content_encoding = None
-        self.header = None
-        self.header_content_length = None
+        self.reason = None
+        self.history = []  # redirect history
+#        self.last_modified = None
+        self.header = {}
         self.content = ''
-        self.content_length = None
+        self.content_type = None # get from http header like text/html
+        self.redirect_url = None
 
         # get from analysis from content
-        self.orig_encoding = None
-        self.conv_encoding = None
-        self.language = None
+        self.orig_encoding = None   # get from the metadata
+        self.conv_encoding = 'utf-8'
+        '''
+        TODO:language does not implementation, you can use nltk to do this, need word dict
+        http://blog.alejandronolla.com/2013/05/15/detecting-text-language-with-python-and-nltk/
+        '''
+        #self.language = None
         self.outlinks = []
 
         self.__dict__.update(entries) # update var dict
@@ -89,4 +99,6 @@ class CrawlDoc(AbstractObject):
                 self.reservation_dict[ol] = raw[ol]
 
     def __str__(self):
-        return str(sorted(self.convert.items(),key=lambda e:e[1],reverse=True))
+        show_dict = copy.copy(self.convert)
+        show_dict['content'] = '_CLEAN_UP_'
+        return str(sorted(show_dict.items(),key=lambda e:e[1],reverse=True))
