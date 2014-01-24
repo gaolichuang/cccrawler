@@ -11,6 +11,7 @@ from miracle.common.base import log as logging
 
 from cccrawler.manager import manager
 from cccrawler.proto.crawldoc import CrawlDoc
+from cccrawler.handler import htmlparser
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -28,8 +29,16 @@ class DummyHandlerManager(manager.CrawlManager):
 class HandlerManager(manager.CrawlManager):
     def __init__(self):
         super(HandlerManager,self).__init__()
+        self.htmlparser = htmlparser.Parser()
     def ProcessCrawlDoc(self,crawldoc):
         LOG.debug(_('Get one crawldoc at %(name_)s %(handler_id)s crawldoc %(crawldoc)s'),
                   {'name_':self.__class__.__name__,
                    'handler_id':self.m_id,
                    'crawldoc':crawldoc})
+        self.htmlparser.process(crawldoc)
+        LOG.debug(_('Finish Process one crawldoc at %(name_)s %(handler_id)s crawldoc %(crawldoc)s'),
+                  {'name_':self.__class__.__name__,
+                   'handler_id':self.m_id,
+                   'crawldoc':crawldoc})
+
+

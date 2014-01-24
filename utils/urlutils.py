@@ -17,14 +17,20 @@ def parse_url(url):
 
 def gethost(url):
     return urlparse.urlparse(url).hostname
+def gettopdomain(url):
+    host = urlparse.urlparse(url).hostname
+    return host.split('.')[-1]
+def getdomain(url):
+    host = urlparse.urlparse(url).hostname
+    return '.'.join(host.split('.')[1:])
 
 def gethostname(host):
     try:
-      if hasattr(socket, 'setdefaulttimeout'):
-          socket.setdefaulttimeout(1)
-      return socket.gethostbyname(host)
+        if hasattr(socket, 'setdefaulttimeout'):
+            socket.setdefaulttimeout(1)
+        return socket.gethostbyname(host)
     except socket.timeout:
-      return host
+        return host
 
 def translate_host(url, ip):
     parse = parse_url(url)

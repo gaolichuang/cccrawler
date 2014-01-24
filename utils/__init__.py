@@ -12,7 +12,7 @@ def ToDict(obj):
     raw_dict = {}
     for name,value in vars(obj).items():
 #            print('%s=%s'%(name,value))
-        if name.startswith('__'):
+        if name.startswith('_'):
             continue
         if  isinstance(value, list):
             raw = []
@@ -41,4 +41,5 @@ def ToStr(obj, clean_content = True, reverse = True):
     r_dict = ToDict(obj)
     if clean_content:
         r_dict['content'] = ''
+        pass
     return str(sorted(r_dict.items(),key=lambda e:e[1],reverse=reverse))

@@ -21,8 +21,8 @@ class DummySchedulerManager(manager.CrawlManager):
         super(DummySchedulerManager,self).__init__()
     def run_periodic_report_tasks(self,service):
         doc = CrawlDoc()
-#        doc.request_url = 'http://roll.sohu.com/'
-        doc.request_url = 'http://www.163.com/'
+        doc.request_url = 'http://roll.sohu.com/'
+#        doc.request_url = 'http://www.163.com/'
         doc.url = doc.request_url
         doc.level = 1
 #        doc.outlinks.append(OutLink('url1','text1'))
