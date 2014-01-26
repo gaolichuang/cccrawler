@@ -14,7 +14,8 @@ from miracle.common.base import log as logging
 fetch_client_opts = [
     cfg.StrOpt('user_agent',
                default='cccrawler-spider',
-               help='user_agent'),
+               help='user_agent'
+               'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1700.76 Safari/537.36'),
     cfg.ListOpt('accept_types',
                default = ['text/html','application/xhtml+xml','application/xml;q=0.9,image/webp,*/*;q=0.8'],
                help='request accept types'),

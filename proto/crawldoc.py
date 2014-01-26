@@ -55,6 +55,9 @@ class CrawlDoc(AbstractObject):
         self.timestamp = None
         self.parent_url = None
         self.level = 0  # start from 0
+        # use for fetch
+        self.host = None # save calculate
+        self.fake_host = None # use for hostload
         
         # crawl meta, use for custom crawl
         self.method = 'GET' # default is get
@@ -70,6 +73,8 @@ class CrawlDoc(AbstractObject):
         self.content = ''
         self.content_type = None # get from http header like text/html
         self.redirect_url = None
+
+        self.crawl_time = None # fill at fetcher
 
         # get from analysis from content
         self.orig_encoding = None   # get from the metadata

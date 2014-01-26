@@ -5,6 +5,7 @@ Created on 2014.1.8
 '''
 
 from oslo.config import cfg
+import mmh3 # https://github.com/gaolichuang/mmh3
 
 from miracle.common.utils.gettextutils import _  # noqa
 from miracle.common.base import log as logging
@@ -20,11 +21,15 @@ class DummySchedulerManager(manager.CrawlManager):
     def __init__(self):
         super(DummySchedulerManager,self).__init__()
     def run_periodic_report_tasks(self,service):
+        '''TODO: fill url host level and something
+            make some nessary check'''
         doc = CrawlDoc()
         doc.request_url = 'http://roll.sohu.com/'
 #        doc.request_url = 'http://www.163.com/'
         doc.url = doc.request_url
+        doc.docid = mmh3.hash(doc.url)
         doc.level = 1
+        doc.host = 'roll.sohu.com'
 #        doc.outlinks.append(OutLink('url1','text1'))
 #        doc.outlinks.append(OutLink('url2','text2'))
         self.output(doc)
