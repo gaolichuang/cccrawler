@@ -51,7 +51,10 @@ class Filter(object):
         self.url_whitelist = url_whitelist
         if self.url_whitelist == None:
             self.url_whitelist = CONF.url_whitelist
-
+    def Legalurl(self,url):
+        if url.startswith('http'):
+            return True
+        return False
     def filter(self,url):
         self.load(self.url_whitelist_filename)
         if self.filterbydomain(url):
@@ -59,6 +62,7 @@ class Filter(object):
         if self.filterbyurl(url):
             return True,'FilterByUrlWhitelist'
         return False,''
+
     def filterbydomain(self,url):
         topdomain = urlutils.gettopdomain(url)
         return not topdomain in self.domain_whitelist

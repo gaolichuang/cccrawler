@@ -47,16 +47,19 @@ class OutLink(AbstractObject):
      
 class CrawlDoc(AbstractObject):
     def __init__(self, entries = {}):
+        # fill by export scheduler
         self.request_url = None
+        self.reservation_dict = {}
+        self.parent_docid = None
+        self.level = 0  # start from 0
+        self.detect_time = 0 # when to crawl come from scheduler
+        self.pending_id = None # get from pending database
+        # fill by scheduler
         self.url= None  # nomalize from self.request_url
         self.docid = None   # url fingerprint, use MurmurHash  https://pypi.python.org/pypi/mmh3/2.2
-        self.reservation_dict = {}
-        # the time when this doc is fetched, in seconds of UTC time.
-        self.timestamp = None
-        self.parent_url = None
-        self.level = 0  # start from 0
-        # use for fetch
         self.host = None # save calculate
+
+        # use for fetch fill at dispatch
         self.fake_host = None # use for hostload
         
         # crawl meta, use for custom crawl

@@ -8,12 +8,13 @@ Created on 2014.1.19
 import urlparse
 import socket
 import re
-
+import urllib
 
 _SUPPORT_CHARSET_ = ['gbk','gb2312','utf-8','big5','latin-1']
 
 def parse_url(url):
     return urlparse.urlparse(url)
+
 
 def gethost(url):
     return urlparse.urlparse(url).hostname
@@ -42,6 +43,12 @@ def translate_host(url, ip):
     target = re.compile(netloc)
     new_netloc = target.sub(ip,parse.netloc)
     another = urlparse.ParseResult(parse.scheme, new_netloc, parse.path, parse.params, parse.query, parse.fragment)
+    return urlparse.urlunparse(another)
+def normalize(url):
+    ''' encode url and remove fragment '''
+    url = urllib.quote(url,safe="%/:=&?~#+!$,;'@()*[]")
+    parse = parse_url(url)
+    another = urlparse.ParseResult(parse.scheme, parse.netloc, parse.path, parse.params, parse.query, '')
     return urlparse.urlunparse(another)
 
 def normalize_url(url):

@@ -63,16 +63,21 @@ def loadConfToDict(load_dict, conf_list, conf_file, conf_str = ''):
             LOG.debug(_("%(confstr)s Load key: %(info0)s, value:%(info1)s"),
                         {'confstr':conf_str,'info0':info[0],'info1':info[1]})
     if conf_file and os.path.exists(conf_file):
-        fp = open(conf_file, 'r')
-        lines = fp.readlines()
-        for line in lines:
-            info = line.split(',')
-            info[0] = "".join(info[0].split())
-            if not info[0] in load_dict.keys():
-                load_dict[info[0]] = info[1]
-                LOG.debug(_("%(confstr)s Load from file key: %(info0)s, value:%(info1)s"),
-                            {'confstr':conf_str,'info0':info[0],'info1':info[1]})
-        fp.close()
+        with open(conf_file, 'r') as fp:
+            lines = fp.readlines()
+            for line in lines:
+                info = line.split(',')
+                info[0] = "".join(info[0].split())
+                if not info[0] in load_dict.keys():
+                    load_dict[info[0]] = info[1]
+                    LOG.debug(_("%(confstr)s Load from file key: %(info0)s, value:%(info1)s"),
+                                {'confstr':conf_str,'info0':info[0],'info1':info[1]})
     else:
         LOG.debug(_("%(confstr)s conf file not exist conf file:%(cfile)s"),
                     {'confstr':conf_str,'clist':conf_list,'cfile':conf_file})
+
+
+def IsCrawlSuccess(crawldoc):
+    if crawldoc.code == 200 or crawldoc.code == 201 or crawldoc.code == 202:
+        return True
+    return False

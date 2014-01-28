@@ -31,11 +31,11 @@ class FetcherManager(manager.CrawlManager):
         LOG.debug(_("Before ProcessCrawldoc sleep %(sleep)s at %(fetch_id)s  crawldoc: %(crawldoc)s"),
                   {'sleep':delay,
                    'fetch_id':self.m_id,
-                   'crawldoc':crawldoc})        
+                   'crawldoc':crawldoc})
         greenthread.sleep(delay)
         self.client.process(crawldoc)
         print crawldoc.content
-        crawldoc.crawl_time = timeutils.utcnow_ts()
+        crawldoc.crawl_time = int(timeutils.utcnow_ts())
         LOG.debug(_("Before ProcessCrawldoc at %(fetch_id)s  crawldoc: %(crawldoc)s"),
                   {'fetch_id':self.m_id,
                    'crawldoc':crawldoc})
