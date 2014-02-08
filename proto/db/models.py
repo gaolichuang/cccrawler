@@ -72,7 +72,8 @@ class CrawlFailResult(CrawlResult,models.TimestampMixin):
 
 class CrawlPending(BASE, models.MixinModelBase):
     '''save the url which already found but not crawl
-        save crawl success extract outlinks'''
+        save crawl success extract outlinks
+        CrawlPending has all urls, it could to be use for derepeat, use docid'''
     __tablename__ = 'crawl_pending'
     __table_args__ = {
         'mysql_engine': 'InnoDB',
@@ -80,6 +81,11 @@ class CrawlPending(BASE, models.MixinModelBase):
     }
     id = Column('id', Integer, primary_key=True)  # this will carry at crawldoc
     request_url = Column('request_url', String(255))
+    
+    # url and docid id calculated by request_url
+    url = Column('url', Integer)
+    docid = Column('docid', Integer)
+
     outlink_text = Column('content', Text) # outlink text
     reservation_dict = Column('res', Text)  # type dict
     parent_docid = Column('p_id',Integer)
@@ -90,7 +96,6 @@ class CrawlPending(BASE, models.MixinModelBase):
     # crawl status: fresh or None(find) scheduled(find and schedule out) crawled(finish crawl)
     # finish crawl maybe soft delete
     crawl_status =  Column('c_status', String(32))
-    
 
 class CrawlFailPending(CrawlPending):
     '''save the crawl fail url, use to recrawl'''
@@ -99,4 +104,3 @@ class CrawlFailPending(CrawlPending):
         'mysql_engine': 'InnoDB',
         'mysql_charset': 'utf8'
     }
-    

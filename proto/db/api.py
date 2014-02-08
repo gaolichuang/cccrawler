@@ -6,6 +6,8 @@ Created on 2014.1.28
 
 use sqlalchemy as database backend
 '''
+import mmh3 # https://github.com/gaolichuang/mmh3
+
 from eventlet import greenthread
 from sqlalchemy import or_
 
@@ -18,6 +20,9 @@ from miracle.common.db.sqlalchemy import session as db_session
 from miracle.common.proto import crawldoc
 from cccrawler.proto.db import models
 from miracle.common.db import utils
+from cccrawler.handler import deweight
+from cccrawler.utils import urlutils
+
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -75,20 +80,37 @@ def _format_pending_crawldoc(doc):
     cdoc.detect_time = doc.detect_time
     cdoc.pending_id = doc.id
     return cdoc
+
 def addPendingCrawlDoc(url, level, parent_id, res_dict = {},text = ''):
-        pvalues = {}
-        pvalues['request_url'] = url
-        pvalues['outlink_text'] = text
-        pvalues['level'] = crawldoc.level + 1
-        pvalues['reservation_dict'] = str(res_dict)
-        pvalues['detect_time'] = int(timeutils.utcnow_ts())
-        pvalues['crawl_status'] = 'fresh'
-        pvalues['parent_docid'] = parent_id
-        pvalues['recrawl_times'] = 0
-        pend_ref = models.CrawlPending()
-        pend_ref.update(pvalues)
-        pend_ref.save()    
-    
+    pvalues = addPendingCrawlDocDict(url, level, parent_id, res_dict,text)
+    pend_ref = models.CrawlPending()
+    pend_ref.update(pvalues)
+    pend_ref.save()
+def addPendingCrawlDocDict(url, level, parent_id, res_dict = {},text = ''):
+    pvalues = {}
+    pvalues['request_url'] = url
+    # fill url and docid when save to db
+    pvalues['url'] = urlutils.normalize(url)
+    pvalues['docid'] = mmh3.hash(pvalues['url'])
+    pvalues['outlink_text'] = text
+    pvalues['level'] = crawldoc.level + 1
+    pvalues['reservation_dict'] = str(res_dict)
+    pvalues['detect_time'] = int(timeutils.utcnow_ts())
+    pvalues['crawl_status'] = 'fresh'
+    pvalues['parent_docid'] = parent_id
+    pvalues['recrawl_times'] = 0
+    return pvalues
+    pend_ref = models.CrawlPending()
+    pend_ref.update(pvalues)
+    pend_ref.save()
+def rushPendingCrawlDoc(docs = []):
+    if len(docs) == 0:
+        return
+    session = db_session.get_session()
+    with session.begin():
+        session.execute(
+                models.CrawlPending.__table__.insert(),
+                docs)
 def saveSuccessCrawlDoc(crawldoc):
     '''step1: save crawl success crawldoc to crawl_result, make sure docid is unique
        step2: save outlinks(found new url) to crawl_pending
@@ -101,9 +123,14 @@ def saveSuccessCrawlDoc(crawldoc):
     crawldoc_ref.update(values)
     crawldoc_ref.save()
     _updateCrawlStatus(crawldoc.pending_id,'crawled',crawlfail=False)
+    cl = deweight.get_client()
+    fresh_docs = []
     for doc in crawldoc.outlinks:
-        addPendingCrawlDoc(doc.url, crawldoc.level + 1,  crawldoc.docid, crawldoc.reservation_dict,doc.text,)
-
+#        addPendingCrawlDoc(doc.url, crawldoc.level + 1,  crawldoc.docid, crawldoc.reservation_dict,doc.text,)
+        if not cl.has(crawldoc.docid):
+            fresh_doc = addPendingCrawlDocDict(doc.url, crawldoc.level + 1,  crawldoc.docid, crawldoc.reservation_dict,doc.text,)
+            fresh_docs.append(fresh_doc)
+    rushPendingCrawlDoc(fresh_docs)
 def saveFailCrawlDoc(crawldoc):
     '''step1: save crawl fail crawldoc to crawl_fail_result, docid can repeat
        step2: update crawl url status which at crawl_pending to crawled
@@ -251,7 +278,13 @@ def _getPendingCrawldoc(crawlfail = False, delete = False, filters=None,
     LOG.debug(_("get crawldoc sql %(query)s"),{'query':query})
     
     return query.all()
-    
+
+def getAllDocId():
+    '''get all docid from crawlpending use for de weight'''
+    session = db_session.get_session()
+    with session.begin():
+        keys = session.execute('select docid from crawl_pending').fetchall()                                                                   
+    return keys
 
 if __name__ == '__main__':
     pass

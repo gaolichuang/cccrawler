@@ -17,7 +17,8 @@ from cccrawler.proto.crawldoc import OutLink
 from cccrawler.proto.db import api as db_api
 from cccrawler.utils import urlutils
 from cccrawler.handler import urlfilter
-
+from cccrawler.handler import deweight
+from cccrawler.proto import utils as crawldoc_utils
 scheduler_opt = [
     cfg.IntOpt('max_level',
                default=1,
@@ -75,6 +76,14 @@ class ExportSchedulerManager(manager.CrawlManager):
         self.crawl_timeout = CONF.crawl_timeout
         
         self.filter = urlfilter.Filter()
+        self.unique = deweight.get_client()
+        self.checker = crawldoc_utils.CrawlDocChecker()
+    def pre_start_hook(self):
+        '''TODO: load all found docid from crawlpending for repeat'''
+        keys = db_api.getAllDocId()
+        fresh_keys = self.unique.unique(keys)
+        LOG.info(_('Load fresh keys number %(keys)s'),{'keys':len(fresh_keys)})
+
     def run_periodic_report_tasks(self,service):
         '''TODO: Read from database'''
         ''' get fresh crawldoc'''
@@ -96,12 +105,17 @@ class ExportSchedulerManager(manager.CrawlManager):
                     fail_docs = db_api.getTimeoutFailCrawlDoc(self.crawl_timeout,
                                             self.max_fail_retry_time + self.max_timeout_retry_time,
                                             self.read_batch_num)
+        # check good crawldoc or not
         for doc in docs:
-            if not self.filter.Legalurl(doc.request_url):
+            if not self.checker.checkbefore(doc):
+                LOG.error(_('UnHealthy  crawldoc %(crawldoc)s'),{'crawldoc':doc})
+                continue
+            if not self.filter.Legalurl(doc.url):
                 LOG.error(_('UnLegalurl  crawldoc %(crawldoc)s'),{'crawldoc':doc})
                 continue
-            doc.url = urlutils.normalize(doc.request_url)
-            doc.docid = mmh3.hash(doc.url)
+            # url and docid save at db_api.addPendingCrawlDocDict
+#            doc.url = urlutils.normalize(doc.request_url)
+#            doc.docid = mmh3.hash(doc.url)
             doc.host = urlutils.gethost(doc.url)
             self.output(doc)
     def Run(self, context, *args, **kwargs):

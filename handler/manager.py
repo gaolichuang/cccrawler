@@ -15,6 +15,8 @@ from cccrawler.proto.crawldoc import CrawlDoc
 from cccrawler.handler import htmlparser
 from cccrawler.proto.db import api as db_api
 from cccrawler import utils
+from cccrawler.proto import utils as crawldoc_utils
+
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
@@ -32,6 +34,7 @@ class HandlerManager(manager.CrawlManager):
     def __init__(self):
         super(HandlerManager,self).__init__()
         self.htmlparser = htmlparser.Parser()
+        self.checker = crawldoc_utils.CrawlDocChecker()
     def ProcessCrawlDoc(self,crawldoc):
         LOG.debug(_('Get one crawldoc at %(name_)s %(handler_id)s crawldoc %(crawldoc)s'),
                   {'name_':self.__class__.__name__,
@@ -42,6 +45,10 @@ class HandlerManager(manager.CrawlManager):
                   {'name_':self.__class__.__name__,
                    'handler_id':self.m_id,
                    'crawldoc':crawldoc})
+        # show some log
+        if not self.checker.checkafter(crawldoc):
+            continue
+
         start_time = time.time()
         if utils.IsCrawlSuccess():
             db_api.saveSuccessCrawlDoc(crawldoc)
