@@ -47,10 +47,10 @@ class HandlerManager(manager.CrawlManager):
                    'crawldoc':crawldoc})
         # show some log
         if not self.checker.checkafter(crawldoc):
-            continue
+            return
 
         start_time = time.time()
-        if utils.IsCrawlSuccess():
+        if utils.IsCrawlSuccess(crawldoc):
             db_api.saveSuccessCrawlDoc(crawldoc)
             LOG.debug(_('Finish Save Success Crawldoc to DB use %(cost)s'),
                         {'cost':(time.time()-start_time)})

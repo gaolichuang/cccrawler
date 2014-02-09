@@ -84,16 +84,20 @@ def _format_pending_crawldoc(doc):
     return cdoc
 
 def addPendingCrawlDoc(url, level, parent_id, res_dict = {},text = ''):
-    pvalues = addPendingCrawlDocDict(url, level, parent_id, res_dict,text)
+    pvalues = addPendingCrawlDocDict(url, level, parent_id, res_dict, text)
     pend_ref = models.CrawlPending()
     pend_ref.update(pvalues)
     pend_ref.save()
-def addPendingCrawlDocDict(url, level, parent_id, res_dict = {},text = ''):
+def addPendingCrawlDocDict(url, level, parent_id, res_dict = {},text = '', real_url = '', docid = 0):
     pvalues = {}
     pvalues['request_url'] = url
     # fill url and docid when save to db
-    pvalues['url'] = urlutils.normalize(url)
-    pvalues['docid'] = mmh3.hash(pvalues['url'])
+    pvalues['url'] = real_url
+    if real_url == '':
+        pvalues['url'] = urlutils.normalize(url)
+    pvalues['docid'] = docid
+    if docid == 0:
+        pvalues['docid'] = mmh3.hash(pvalues['url'])
     pvalues['outlink_text'] = text
     pvalues['level'] = level + 1
     pvalues['reservation_dict'] = str(res_dict)
@@ -117,27 +121,37 @@ def saveSuccessCrawlDoc(crawldoc):
     '''step1: save crawl success crawldoc to crawl_result, make sure docid is unique
        step2: save outlinks(found new url) to crawl_pending
        step3: update crawl url status which at crawl_pending to crawled'''
-    values = crawldoc.convert()
+    values = crawldoc.convert
     values['reservation_dict'] = str(crawldoc.reservation_dict)
+    values['history'] = str(values['history'])
+    values['header'] = str(values['header'])
     values['created_at'] = timeutils.utcnow_ts()
     utils.convert_datetimes(values, 'created_at', 'deleted_at', 'updated_at')
     crawldoc_ref = models.CrawlResult()
     crawldoc_ref.update(values)
     crawldoc_ref.save()
+
     _updateCrawlStatus(crawldoc.pending_id,'crawled',crawlfail=False)
+
     cl = deweight.get_client()
     fresh_docs = []
     for doc in crawldoc.outlinks:
-#        addPendingCrawlDoc(doc.url, crawldoc.level + 1,  crawldoc.docid, crawldoc.reservation_dict,doc.text,)
-        if not cl.has(crawldoc.docid):
-            fresh_doc = addPendingCrawlDocDict(doc.url, crawldoc.level + 1,  crawldoc.docid, crawldoc.reservation_dict,doc.text,)
+        real_url = urlutils.normalize(doc.url)
+        docid = mmh3.hash(real_url)
+        if not cl.has(docid):
+            fresh_doc = addPendingCrawlDocDict(doc.url, int(crawldoc.level),
+                        crawldoc.docid, crawldoc.reservation_dict,doc.text,
+                        real_url, docid)
+            print '@'*60
+            print fresh_doc
+            print '@'*60
             fresh_docs.append(fresh_doc)
     rushPendingCrawlDoc(fresh_docs)
 def saveFailCrawlDoc(crawldoc):
     '''step1: save crawl fail crawldoc to crawl_fail_result, docid can repeat
        step2: update crawl url status which at crawl_pending to crawled
        step3: update or insert crawl fail status which at crawl_fail_pending'''
-    values = crawldoc.convert()
+    values = crawldoc.convert
     values['reservation_dict'] = str(crawldoc.reservation_dict)
     values['created_at'] = timeutils.utcnow_ts()
     utils.convert_datetimes(values, 'created_at', 'deleted_at', 'updated_at')
@@ -167,7 +181,7 @@ def getFreshCrawlDoc(limit,level):
     docs = _getPendingCrawldoc(filters = filters, limit = limit, sort_key = 'level')
     LOG.debug(_("get Fresh Crawldoc number %(docs)s"),{'docs':len(docs)})
     for doc in docs:
-        _updateScheduleDoc(doc.id, doc.recrawl_times, 'crawled', crawlfail = False)
+        _updateScheduleDoc(doc.id, doc.recrawl_times, 'scheduled', crawlfail = False)
     return [_format_pending_crawldoc(doc) for doc in docs]
 
 def getTimeoutCrawlDoc(timeout, max_timeout_time, limit):

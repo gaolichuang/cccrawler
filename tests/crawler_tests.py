@@ -18,9 +18,9 @@ def main():
     logging.setup("cccrawler")
 
     server = multiservice.MultiServer.create(
-                    managers = ['cccrawler.scheduler.manager.ExportSchedulerManager',])
-#                                'cccrawler.fetcher.managercontainer.FetcherManagerContainer',
-#                                'cccrawler.handler.manager.HandlerManager'])
+                    managers = ['cccrawler.scheduler.manager.ExportSchedulerManager',
+                                'cccrawler.fetcher.managercontainer.FetcherManagerContainer',
+                                'cccrawler.handler.manager.HandlerManager'])
 
     service.serve(server)
     service.wait()

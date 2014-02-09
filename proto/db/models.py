@@ -79,16 +79,16 @@ class CrawlPendingBase(object):
     url = Column('url', Integer)
     docid = Column('docid', Integer)
 
-    outlink_text = Column('content', Text) # outlink text
-    reservation_dict = Column('res', Text)  # type dict
-    parent_docid = Column('p_id',Integer)
+    outlink_text = Column('outlink_text', Text) # outlink text
+    reservation_dict = Column('reservation_dict', Text)  # type dict
+    parent_docid = Column('parent_docid',Integer)
     level = Column('level',String(255))
-    detect_time = Column('d_time', Integer) # maybe same with create_time,but it is timestamp
-    schedule_time = Column('s_time', Integer)  # timestamp use for timeout
-    recrawl_times = Column('r_times', Integer)  # recrawl time
+    detect_time = Column('detect_time', Integer) # maybe same with create_time,but it is timestamp
+    schedule_time = Column('schedule_time', Integer)  # timestamp use for timeout
+    recrawl_times = Column('recrawl_times', Integer)  # recrawl time
     # crawl status: fresh or None(find) scheduled(find and schedule out) crawled(finish crawl)
     # finish crawl maybe soft delete
-    crawl_status =  Column('c_status', String(32))
+    crawl_status =  Column('crawl_status', String(32))
 
 
 class CrawlPending(BASE, models.MixinModelBase,CrawlPendingBase):
