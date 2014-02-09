@@ -5,7 +5,7 @@ Created on 2014.2.8
 
 de weight by keys
 '''
-from miracle.common.base import memcache
+from miracle.common.base import memorycache as memcache
 
 _unique_client = None
 

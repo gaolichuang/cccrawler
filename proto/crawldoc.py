@@ -108,5 +108,6 @@ class CrawlDoc(AbstractObject):
 
     def __str__(self):
         show_dict = copy.copy(self.convert)
-        show_dict['content'] = '_CLEAN_UP_'
+        if len(show_dict['content']) > 1024:
+            show_dict['content'] = '_CLEAN_UP_'
         return str(sorted(show_dict.items(),key=lambda e:e[1],reverse=True))

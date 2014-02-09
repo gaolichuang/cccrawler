@@ -17,7 +17,7 @@ from miracle.common.base import log as logging
 from miracle.common.utils import timeutils
 from miracle.common.db.sqlalchemy import utils as db_utils
 from miracle.common.db.sqlalchemy import session as db_session
-from miracle.common.proto import crawldoc
+from cccrawler.proto import crawldoc
 from cccrawler.proto.db import models
 from miracle.common.db import utils
 from cccrawler.handler import deweight
@@ -74,6 +74,8 @@ def _format_crawldoc(doc):
 def _format_pending_crawldoc(doc):
     cdoc = crawldoc.CrawlDoc()
     cdoc.request_url = doc.request_url
+    cdoc.url = doc.url
+    cdoc.docid = doc.docid
     cdoc.reservation_dict = eval(doc.reservation_dict)
     cdoc.parent_url = doc.parent_docid
     cdoc.level = doc.level
@@ -93,7 +95,7 @@ def addPendingCrawlDocDict(url, level, parent_id, res_dict = {},text = ''):
     pvalues['url'] = urlutils.normalize(url)
     pvalues['docid'] = mmh3.hash(pvalues['url'])
     pvalues['outlink_text'] = text
-    pvalues['level'] = crawldoc.level + 1
+    pvalues['level'] = level + 1
     pvalues['reservation_dict'] = str(res_dict)
     pvalues['detect_time'] = int(timeutils.utcnow_ts())
     pvalues['crawl_status'] = 'fresh'
@@ -163,8 +165,9 @@ def getFreshCrawlDoc(limit,level):
     filters = {'crawl_status':'fresh',
                'max_level':level}
     docs = _getPendingCrawldoc(filters = filters, limit = limit, sort_key = 'level')
+    LOG.debug(_("get Fresh Crawldoc number %(docs)s"),{'docs':len(docs)})
     for doc in docs:
-        _updateScheduleDoc(doc.id,doc.recrawl_time,'crawled',crawlfail = False)
+        _updateScheduleDoc(doc.id, doc.recrawl_times, 'crawled', crawlfail = False)
     return [_format_pending_crawldoc(doc) for doc in docs]
 
 def getTimeoutCrawlDoc(timeout, max_timeout_time, limit):
@@ -176,8 +179,9 @@ def getTimeoutCrawlDoc(timeout, max_timeout_time, limit):
                'max_recrawl_time':max_timeout_time,
                'timeout':timeout}
     docs = _getPendingCrawldoc(filters = filters, limit = limit)
+    LOG.debug(_("get Timeout Crawldoc number %(docs)s"),{'docs':len(docs)})
     for doc in docs:
-        _updateScheduleDoc(doc.id,doc.recrawl_time,'scheduled',crawlfail = False)
+        _updateScheduleDoc(doc.id,doc.recrawl_times,'scheduled',crawlfail = False)
     return [_format_pending_crawldoc(doc) for doc in docs]
 
 def getFailCrawlDoc(retry_time,limit):
@@ -187,8 +191,9 @@ def getFailCrawlDoc(retry_time,limit):
     filters = {'crawl_status':'fresh',
                'max_recrawl_time':retry_time}
     docs = _getPendingCrawldoc(crawlfail = True, filters = filters, limit = limit)
+    LOG.debug(_("get Fail Crawldoc number %(docs)s"),{'docs':len(docs)})
     for doc in docs:
-        _updateScheduleDoc(doc.id,doc.recrawl_time,'crawled',crawlfail = True)
+        _updateScheduleDoc(doc.id,doc.recrawl_times,'crawled',crawlfail = True)
     return [_format_pending_crawldoc(doc) for doc in docs]
 
 def getTimeoutFailCrawlDoc(timeout, max_timeout_time,limit):
@@ -196,8 +201,9 @@ def getTimeoutFailCrawlDoc(timeout, max_timeout_time,limit):
                'max_recrawl_time':max_timeout_time,
                'timeout':timeout}
     docs = _getPendingCrawldoc(crawlfail = True, filters = filters, limit = limit)
+    LOG.debug(_("get Fail Timeout Crawldoc number %(docs)s"),{'docs':len(docs)})
     for doc in docs:
-        _updateScheduleDoc(doc.id,doc.recrawl_time,'scheduled',crawlfail = True)
+        _updateScheduleDoc(doc.id,doc.recrawl_times,'scheduled',crawlfail = True)
     return [_format_pending_crawldoc(doc) for doc in docs]    
 
 def _updateScheduleDoc(pend_id, recrawl_time,crawl_status, crawlfail = False):
@@ -255,26 +261,26 @@ def _getPendingCrawldoc(crawlfail = False, delete = False, filters=None,
     # should mean truly deleted, e.g. we can safely purge the record out of the
     # database.
 
-    query = model_query(models)
     if crawlfail:
-        modes_table = models.CrawlFailPending
+        models_table = models.CrawlFailPending
     else:
-        modes_table = models.CrawlPending
+        models_table = models.CrawlPending
+    query = model_query(models_table)
     if 'crawl_status' in filters and filters['crawl_status'] == 'fresh':
-        query = query.filter(or_(modes_table.crawl_status == 'fresh',
-                                 modes_table.crawl_status == ''))
+        query = query.filter(or_(models_table.crawl_status == 'fresh',
+                                 models_table.crawl_status == ''))
     if 'crawl_status' in filters and filters['crawl_status'] == 'scheduled':
-        query = query.filter(modes_table.crawl_status == 'scheduled')
+        query = query.filter(models_table.crawl_status == 'scheduled')
 
     if 'max_level' in filters:
-        query = query.filter(modes_table.level <= filters['max_level'])
+        query = query.filter(models_table.level <= filters['max_level'])
 
     if 'max_recrawl_time' in filters:
         query = query.filter(
-                modes_table.recrawl_times <= filters['max_recrawl_time'])    
+                models_table.recrawl_times <= filters['max_recrawl_time'])    
     if 'timeout' in filters:
         query = query.filter(
-                modes_table.schedule_time <= filters['timeout'])
+                models_table.schedule_time <= filters['timeout'])
     LOG.debug(_("get crawldoc sql %(query)s"),{'query':query})
     
     return query.all()

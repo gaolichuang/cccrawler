@@ -13,28 +13,7 @@ from miracle.common.db.sqlalchemy import models
 # this must be here!!! use this to create tables
 BASE = declarative_base()
 
-
-class CrawlResult(BASE,models.ModelBase):
-    '''
-    Desc: use to save crawl result.
-        include all field of crawldoc except outlinks, only crawl success doc save here
-        dict and list save to Text
-    di = {'aa': 'aaaaa', 'bb': 11}
-    dict to string:
-        sdi = str(di)
-    string to dict:
-        ddi = eval(sdi)
-    li = ['aa','bb','sdfew']
-    list to string:
-        sli = str(li)
-    string to list:
-        lli = eval(sli)
-    '''
-    __tablename__ = 'crawl_result'
-    __table_args__ = {
-        'mysql_engine': 'InnoDB',
-        'mysql_charset': 'utf8'
-    }
+class CrawlResultBase(object):
     id = Column('id', Integer, primary_key=True)
     request_url = Column('request_url', String(255))
     detect_time =  Column('d_time', Integer)
@@ -61,7 +40,29 @@ class CrawlResult(BASE,models.ModelBase):
     conv_encoding = Column('c_encoding',String(255))
 
 
-class CrawlFailResult(CrawlResult,models.TimestampMixin):
+class CrawlResult(BASE,models.ModelBase,CrawlResultBase):
+    '''
+    Desc: use to save crawl result.
+        include all field of crawldoc except outlinks, only crawl success doc save here
+        dict and list save to Text
+    di = {'aa': 'aaaaa', 'bb': 11}
+    dict to string:
+        sdi = str(di)
+    string to dict:
+        ddi = eval(sdi)
+    li = ['aa','bb','sdfew']
+    list to string:
+        sli = str(li)
+    string to list:
+        lli = eval(sli)
+    '''
+    __tablename__ = 'crawl_result'
+    __table_args__ = {
+        'mysql_engine': 'InnoDB',
+        'mysql_charset': 'utf8'
+    }
+
+class CrawlFailResult(BASE,models.ModelBase,CrawlResultBase):
     '''it allow not only one url record,
         it has create time and update time, fill at handler'''
     __tablename__ = 'crawl_fail_result'
@@ -70,15 +71,7 @@ class CrawlFailResult(CrawlResult,models.TimestampMixin):
         'mysql_charset': 'utf8'
     }
 
-class CrawlPending(BASE, models.MixinModelBase):
-    '''save the url which already found but not crawl
-        save crawl success extract outlinks
-        CrawlPending has all urls, it could to be use for derepeat, use docid'''
-    __tablename__ = 'crawl_pending'
-    __table_args__ = {
-        'mysql_engine': 'InnoDB',
-        'mysql_charset': 'utf8'
-    }
+class CrawlPendingBase(object):
     id = Column('id', Integer, primary_key=True)  # this will carry at crawldoc
     request_url = Column('request_url', String(255))
     
@@ -97,7 +90,18 @@ class CrawlPending(BASE, models.MixinModelBase):
     # finish crawl maybe soft delete
     crawl_status =  Column('c_status', String(32))
 
-class CrawlFailPending(CrawlPending):
+
+class CrawlPending(BASE, models.MixinModelBase,CrawlPendingBase):
+    '''save the url which already found but not crawl
+        save crawl success extract outlinks
+        CrawlPending has all urls, it could to be use for derepeat, use docid'''
+    __tablename__ = 'crawl_pending'
+    __table_args__ = {
+        'mysql_engine': 'InnoDB',
+        'mysql_charset': 'utf8'
+    }
+
+class CrawlFailPending(BASE, models.MixinModelBase,CrawlPendingBase):
     '''save the crawl fail url, use to recrawl'''
     __tablename__ = 'crawl_fail_pending'
     __table_args__ = {

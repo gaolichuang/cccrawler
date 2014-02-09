@@ -81,6 +81,7 @@ class ExportSchedulerManager(manager.CrawlManager):
     def pre_start_hook(self):
         '''TODO: load all found docid from crawlpending for repeat'''
         keys = db_api.getAllDocId()
+        keys = map(lambda x:x[0],keys)
         fresh_keys = self.unique.unique(keys)
         LOG.info(_('Load fresh keys number %(keys)s'),{'keys':len(fresh_keys)})
 
@@ -117,18 +118,22 @@ class ExportSchedulerManager(manager.CrawlManager):
 #            doc.url = urlutils.normalize(doc.request_url)
 #            doc.docid = mmh3.hash(doc.url)
             doc.host = urlutils.gethost(doc.url)
+            LOG.debug(_('Export crawldoc %(crawldoc)s'),{'crawldoc':doc})
             self.output(doc)
     def Run(self, context, *args, **kwargs):
         '''TODO: save url to pending db'''
         urls = []
-        if not self.filter.Legalurl(CONF.init_url):
+        if self.filter.Legalurl(CONF.init_url):
             urls.append(CONF.init_url)
         if CONF.init_url_file != '' and os.path.exists(CONF.init_url_file):
             with open(CONF.init_url_file, 'r') as fp:
                 lines = fp.readlines()
                 for line in lines:
-                    if not self.filter.Legalurl(line):
+                    if self.filter.Legalurl(line):
                         urls.append(line)
+        cl = deweight.get_client()
         for url in urls:
-            db_api.addPendingCrawlDoc(url, 0, 0)
-            LOG.info(_('Add init url %(url)s'),{'url':url})
+            docid = mmh3.hash(urlutils.normalize(url))
+            if not cl.has(docid):
+                db_api.addPendingCrawlDoc(url, 0, 0)
+                LOG.info(_('Add init url %(url)s'),{'url':url})
