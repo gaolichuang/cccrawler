@@ -122,6 +122,8 @@ def saveSuccessCrawlDoc(crawldoc):
        step2: save outlinks(found new url) to crawl_pending
        step3: update crawl url status which at crawl_pending to crawled'''
     values = crawldoc.convert
+    # only string can save to db, change dict or list to string.
+    # reference: cccrawler.proto.db.models.CrawlResult
     values['reservation_dict'] = str(crawldoc.reservation_dict)
     values['history'] = str(values['history'])
     values['header'] = str(values['header'])
@@ -175,7 +177,7 @@ def saveFailCrawlDoc(crawldoc):
 def getFreshCrawlDoc(limit,level):
     '''param limit: want get how many crawldocs
         step1: get limit crawldoc from crawl_pending 
-        step2: mark crawlstatus to crawl_status update recrawltimes and schedule time'''
+        step2: mark crawlstatus from fresh to scheduled, update recrawltimes and schedule time'''
     filters = {'crawl_status':'fresh',
                'max_level':level}
     docs = _getPendingCrawldoc(filters = filters, limit = limit, sort_key = 'level')
@@ -285,6 +287,8 @@ def _getPendingCrawldoc(crawlfail = False, delete = False, filters=None,
                                  models_table.crawl_status == ''))
     if 'crawl_status' in filters and filters['crawl_status'] == 'scheduled':
         query = query.filter(models_table.crawl_status == 'scheduled')
+    if 'crawl_status' in filters and filters['crawl_status'] == 'crawled':
+        query = query.filter(models_table.crawl_status == 'crawled')
 
     if 'max_level' in filters:
         query = query.filter(models_table.level <= filters['max_level'])

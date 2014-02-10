@@ -50,7 +50,11 @@ class HtmlParser(object):
 
     def process(self,crawldoc):
         start_time = time.time()
-
+        # only text/html and text/xml need parse outlinks
+        content_type = crawldoc.header.get('Content-Type','text')
+        if content_type.find('text') == -1:
+            LOG.debug(_("No need to Parse: %(crawldoc)s"),{'crawldoc':crawldoc})
+            return
         # assign self vars
         for name,value in vars(self).items():
             if not name.startswith('_'):

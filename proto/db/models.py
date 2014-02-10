@@ -16,28 +16,28 @@ BASE = declarative_base()
 class CrawlResultBase(object):
     id = Column('id', Integer, primary_key=True)
     request_url = Column('request_url', String(255))
-    detect_time =  Column('d_time', Integer)
-    reservation_dict = Column('res', Text)  # this is dict
-    parent_url = Column('p_url',String(255))
+    detect_time =  Column('detect_time', Integer)
+    reservation_dict = Column('reservation_dict', Text)  # this is dict
+    parent_url = Column('parent_url',String(255))
     level = Column('level',String(255))
     url = Column('url', String(255))
     docid = Column('docid', Integer)
 
     host = Column('host',String(64))
-    fake_host = Column('fkhost',String(64))
+    fake_host = Column('fake_host',String(64))
     method = Column('method',String(10))
     referer = Column('referer',String(255))
-    custom_accept_types = Column('custom_a_t',String(255))
+    custom_accept_types = Column('custom_accept_types',String(255))
     code =  Column('code', Integer)
     reason = Column('reason',String(255))
     history = Column('history', Text)  # this is list
     header = Column('header', Text) # this is dict translate: dict to str
     content = Column('content', Text)
-    content_type = Column('content_t',String(255))
-    redirect_url = Column('r_url',String(255))
-    crawl_time =  Column('c_time', Integer)
-    orig_encoding = Column('o_encoding',String(255))
-    conv_encoding = Column('c_encoding',String(255))
+    content_type = Column('content_type',String(255))
+    redirect_url = Column('redirect_url',String(255))
+    crawl_time =  Column('crawl_time', Integer)
+    orig_encoding = Column('orig_encoding',String(255))
+    conv_encoding = Column('conv_encoding',String(255))
 
 
 class CrawlResult(BASE,models.ModelBase,CrawlResultBase):
