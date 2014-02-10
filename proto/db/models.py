@@ -76,7 +76,7 @@ class CrawlPendingBase(object):
     request_url = Column('request_url', String(255))
     
     # url and docid id calculated by request_url
-    url = Column('url', Integer)
+    url = Column('url', String(255))
     docid = Column('docid', Integer)
 
     outlink_text = Column('outlink_text', Text) # outlink text
