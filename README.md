@@ -7,6 +7,8 @@ https://docs.google.com/document/d/1X3XrrRTEhDU98dwPZs0XPOdw8-WWMrBrsd0V0YLF40k/
 Project address：https://github.com/gaolichuang/cccrawler
 定位于100k级别的url抓取，小型的定向抓取需求， 太多后对db的压力会很大，需要升级
 
+依赖：https://github.com/gaolichuang/miracle
+
 ### python models
 
 <table>
